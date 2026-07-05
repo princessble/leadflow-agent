@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import sys
 from dotenv import load_dotenv
 from openai import OpenAI
 from mcp import ClientSession, StdioServerParameters
@@ -29,7 +30,7 @@ def mcp_tools_to_openai(tools):
 
 async def run_agent(user_message: str) -> str:
     """Full agentic loop: user message -> Qwen decides -> MCP tools -> answer."""
-    params = StdioServerParameters(command="python", args=["mcp_server.py"])
+    params = StdioServerParameters(command=sys.executable, args=["mcp_server.py"])
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
@@ -44,7 +45,9 @@ async def run_agent(user_message: str) -> str:
                         "appointment-based business, living inside Slack. You have tools to "
                         "add, list, update and assign leads. Use them when needed. "
                         "Keep replies short, friendly and formatted for Slack (use *bold* and bullet points). "
-                        "Never invent leads - always check the database via tools."
+                        "Never invent leads - always check the database via tools. "
+                        "When a message contains a person's name and contact details "
+                        "(phone or email), always use the add_lead tool."
                     ),
                 },
                 {"role": "user", "content": user_message},
